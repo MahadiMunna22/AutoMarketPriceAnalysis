@@ -213,7 +213,7 @@ export default function App() {
       transmission: form.transmission,
       car_type:     form.car_type,
       isNew:        form.isNew,
-      isPremium:    !form.isPremium,
+      isPremium:    form.isPremium,
       powerOutput:  Number(form.powerOutput),
     };
 
