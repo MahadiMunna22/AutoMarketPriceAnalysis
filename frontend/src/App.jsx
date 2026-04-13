@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils";
 // ─────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────
-const API = "http://localhost:8000";
+// const API = "http://localhost:8000";
+const API = "https://automarketpriceanalysis.onrender.com";
 
 const FUELS = [
   { label: "Petrol",   code: 1501.0 },
