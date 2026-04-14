@@ -303,7 +303,7 @@ export default function App() {
                   />
                   <div className="flex gap-3">
                     <Button type="submit" size="lg" disabled={loading}
-                      className="flex-1 bg-slate-900 hover:bg-slate-700 text-white font-semibold tracking-wide h-auto">
+                      className="flex-1 bg-slate-900 hover:bg-slate-700 text-white font-semibold tracking-wide h-auto min-h-10">
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -322,7 +322,7 @@ export default function App() {
                     {result !== null && <Button
                       type="button" variant="outline" size="lg"
                       onClick={handleReset}
-                      className="border-slate-200 text-slate-500 hover:text-slate-700 h-auto w-14"
+                      className="border-slate-200 text-slate-500 hover:text-slate-700 h-auto min-h-10 w-14"
                     >
                       <RotateCcw className="h-8 w-8" />
                     </Button>}
