@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # ── Load artifacts once at startup ──────────────────────────────
-model = CarPriceModel(input_dim=10)
+model = CarPriceModel(input_dim=9)
 model.load_state_dict(torch.load("ml_data/car_model.pt", map_location="cpu"))
 model.eval()
 
@@ -32,13 +32,12 @@ class CarFeatures(BaseModel):
     makeName: str
     modelName: str
     mileage: float
-    color_code: float
-    fuel_code: float
+    color_code: str
+    fuel_code: str
     transmission: str
     car_type: str
-    isNew: bool
     isPremium: bool
-    powerOutput: float
+    first_reg_year: float
 
 # ── Predict endpoint ─────────────────────────────────────────────
 @app.post("/predict")
@@ -49,17 +48,17 @@ def predict(car: CarFeatures):
             le_dict["modelName"].transform([car.modelName])[0],
             le_dict["Transmission_Decoded"].transform([car.transmission])[0],
             le_dict["Type_Decoded"].transform([car.car_type])[0],
-            int(car.isNew),
+            le_dict['Color_Decoded'].transform([car.color_code])[0], 
+            le_dict['Fuel_Decoded'].transform([car.fuel_code])[0],   
             int(car.isPremium),
-            car.mileage,
-            car.powerOutput,
-            car.color_code,
-            car.fuel_code,
+            float(car.mileage),
+            float(car.first_reg_year),
         ]
         x = scaler_X.transform([row]).astype("float32")
         x_tensor = torch.tensor(x)
         with torch.no_grad():
-            pred = model(x_tensor).numpy()
+            pred = model(x_tensor).cpu().numpy()
+
         price = float(np.expm1(scaler_y.inverse_transform(pred))[0][0])
         return {"predicted_price": round(price, 2)}
 

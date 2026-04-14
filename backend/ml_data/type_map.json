@@ -1,16 +1,13 @@
 {
-  "A8": 0,
-  "Cabriolet": 1,
-  "Coup\u00e9": 2,
-  "Gel\u00e4ndewagen": 3,
-  "Kleinwagen": 4,
-  "Kombi": 5,
-  "Limousine": 6,
-  "Pv5": 7,
-  "T8": 8,
-  "Transporter": 9,
-  "Up": 10,
-  "Van": 11,
-  "Wohnmobile": 12,
-  "Xc60": 13
+  "Coup\u00e9": 0,
+  "Nutzfahrzeug": 1,
+  "cabriolet": 2,
+  "kleinwagen": 3,
+  "kombi": 4,
+  "limousine": 5,
+  "neuwagen": 6,
+  "pick-up": 7,
+  "suv": 8,
+  "van": 9,
+  "wohnmobile": 10
 }

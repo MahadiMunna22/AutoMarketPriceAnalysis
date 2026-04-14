@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMakes, getModelsFromMake } from "./data/make_model";
+import { getMakes, getModelsFromMake, getColors, getFuels, getCarTypes } from "./data/make_model";
 
 import { Button }   from "@/components/ui/button";
 import { Input }    from "@/components/ui/input";
@@ -20,40 +20,12 @@ import { cn } from "@/lib/utils";
 // const API = "http://localhost:8000";
 const API = "https://automarketpriceanalysis.onrender.com";
 
-const FUELS = [
-  { label: "Petrol",   code: 1501.0 },
-  { label: "Diesel",   code: 1502.0 },
-  { label: "Hybrid",   code: 1503.0 },
-  { label: "Electric", code: 1504.0 },
-  { label: "LPG",      code: 1505.0 },
-  { label: "CNG",      code: 1506.0 },
-];
-
-const COLORS = [
-  { label: "Black",  code: 1301.0 },
-  { label: "White",  code: 1302.0 },
-  { label: "Silver", code: 1303.0 },
-  { label: "Grey",   code: 1304.0 },
-  { label: "Blue",   code: 1305.0 },
-  { label: "Red",    code: 1306.0 },
-  { label: "Green",  code: 1307.0 },
-  { label: "Brown",  code: 1308.0 },
-  { label: "Beige",  code: 1309.0 },
-  { label: "Orange", code: 1310.0 },
-  { label: "Yellow", code: 1311.0 },
-];
-
-const TRANSMISSIONS = ["Manual", "Automatic", "Semi-automatic"];
-
-const CAR_TYPES = [
-  "Limousine", "Kombi", "Geländewagen", "Coupé",
-  "Cabrio", "Van", "Kleinwagen", "Pickup", "SUV",
-];
+const TRANSMISSIONS = ["Manual", "Automatic"];
 
 const DEFAULT_FORM = {
-  makeName: "", modelName: "", mileage: "", powerOutput: "",
+  makeName: "", modelName: "", mileage: "", first_reg_year: "",
   fuel_code: "", transmission: "", car_type: "", color_code: "",
-  isNew: false, isPremium: false,
+  isPremium: false,
 };
 
 // ─────────────────────────────────────────────
@@ -141,7 +113,7 @@ function Toggle({ label, description, icon: Icon, checked, onCheckedChange }) {
       type="button"
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all duration-150 w-full",
+        "flex items-center gap-3 rounded-xl border-2 p-2 pe-4 text-left transition-all duration-150 w-full",
         checked
           ? "border-blue-500 bg-blue-50 shadow-sm"
           : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
@@ -183,6 +155,15 @@ export default function App() {
   const [makes] = useState(() =>
     getMakes().map((m) => (typeof m === "string" ? m : m.makeName ?? m.name ?? String(m)))
   );
+  const [colors] = useState(() =>
+    getColors().map((c) => (typeof c === "string" ? c : c.color ?? c.name ?? String(c)))
+  );
+  const [fuels] = useState(() =>
+    getFuels().map((f) => (typeof f === "string" ? f : f.fuel ?? f.name ?? String(f)))
+  );
+  const [carTypes] = useState(() =>
+    getCarTypes().map((t) => (typeof t === "string" ? t : t.car_type ?? t.name ?? String(t)))
+  );
 
   useEffect(() => {
     if (form.makeName) {
@@ -208,14 +189,19 @@ export default function App() {
       makeName:     form.makeName,
       modelName:    form.modelName,
       mileage:      Number(form.mileage),
-      color_code:   Number(form.color_code),
-      fuel_code:    Number(form.fuel_code),
+      color_code:   form.color_code,
+      fuel_code:    form.fuel_code,
       transmission: form.transmission,
       car_type:     form.car_type,
-      isNew:        form.isNew,
       isPremium:    form.isPremium,
-      powerOutput:  Number(form.powerOutput),
+      first_reg_year: Number(form.first_reg_year),
     };
+
+    if (!payload.makeName || !payload.modelName || isNaN(payload.mileage) || !payload.color_code || !payload.fuel_code || !payload.transmission || !payload.car_type || isNaN(payload.first_reg_year)) {
+      setError("Please fill in all required fields with valid values.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`${API}/predict`, {
@@ -237,7 +223,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Hero banner ── */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-10 text-center">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-10 pb-48 text-center">
         <div className="mx-auto max-w-2xl">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
             <Sparkles className="h-3 w-3 text-yellow-400" />
@@ -253,7 +239,7 @@ export default function App() {
       </div>
 
       {/* ── Form card ── */}
-      <div className="mx-auto max-w-2xl px-4 pb-16 -mt-4">
+      <div className="mx-auto max-w-2xl px-4 pb-16 -mt-40">
         <Card className="border-0 shadow-xl rounded-2xl overflow-hidden py-0">
           <CardContent className="p-6 sm:p-8 space-y-7">
             <form onSubmit={handleSubmit} className="space-y-7">
@@ -271,62 +257,34 @@ export default function App() {
                     disabled={!form.makeName} />
                 </Field>
                 <Field label="Car Type" icon={Settings2}>
-                  <Select value={form.car_type} onValueChange={(v) => set("car_type", v)}>
-                    <SelectTrigger className="w-full bg-white border-slate-200">
-                      <SelectValue placeholder="Select car type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CAR_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Combobox value={form.car_type} onChange={(v) => set("car_type", v)}
+                    options={carTypes} placeholder="Select car type" />
                 </Field>
                 <Field label="Transmission" icon={Settings2}>
-                  <Select value={form.transmission} onValueChange={(v) => set("transmission", v)}>
-                    <SelectTrigger className="w-full bg-white border-slate-200">
-                      <SelectValue placeholder="Select transmission" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TRANSMISSIONS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Combobox value={form.transmission} onChange={(v) => set("transmission", v)}
+                    options={TRANSMISSIONS} placeholder="Select transmission" />
                 </Field>
               </Section>
 
               {/* Specs */}
               <Section title="Specifications">
                 <Field label="Fuel Type" icon={Fuel}>
-                  <Select value={String(form.fuel_code)} onValueChange={(v) => set("fuel_code", v)}>
-                    <SelectTrigger className="w-full bg-white border-slate-200">
-                      <SelectValue placeholder="Select fuel type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FUELS.map(({ label, code }) => (
-                        <SelectItem key={code} value={String(code)}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox value={form.fuel_code} onChange={(v) => set("fuel_code", v)}
+                    options={fuels} placeholder="Select fuel type" />
                 </Field>
                 <Field label="Color" icon={Palette}>
-                  <Select value={String(form.color_code)} onValueChange={(v) => set("color_code", v)}>
-                    <SelectTrigger className="w-full bg-white border-slate-200">
-                      <SelectValue placeholder="Select color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COLORS.map(({ label, code }) => (
-                        <SelectItem key={code} value={String(code)}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox value={form.color_code} onChange={(v) => set("color_code", v)}
+                    options={colors} placeholder="Select color" />
                 </Field>
                 <Field label="Mileage (km)" icon={Gauge}>
                   <Input type="number" placeholder="e.g. 50 000" min={0}
-                    className="bg-white border-slate-200"
+                    className="bg-white border-slate-200 h-10"
                     value={form.mileage} onChange={(e) => set("mileage", e.target.value)} />
                 </Field>
-                <Field label="Power Output (PS)" icon={Zap}>
-                  <Input type="number" placeholder="e.g. 211" min={0}
-                    className="bg-white border-slate-200"
-                    value={form.powerOutput} onChange={(e) => set("powerOutput", e.target.value)} />
+                <Field label="Car's Age (years)" icon={Zap}>
+                  <Input type="number" placeholder="e.g. 5" min={0}
+                    className="bg-white border-slate-200 h-10"
+                    value={form.first_reg_year} onChange={(e) => set("first_reg_year", e.target.value)} />
                 </Field>
               </Section>
 
@@ -337,19 +295,38 @@ export default function App() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Toggle
-                    label="Brand New"
-                    description="Never registered"
-                    icon={BadgeCheck}
-                    checked={form.isNew}
-                    onCheckedChange={(v) => set("isNew", v)}
-                  />
-                  <Toggle
                     label="Premium Segment"
                     description="Luxury / high-end trim"
                     icon={Sparkles}
                     checked={form.isPremium}
                     onCheckedChange={(v) => set("isPremium", v)}
                   />
+                  <div className="flex gap-3">
+                    <Button type="submit" size="lg" disabled={loading}
+                      className="flex-1 bg-slate-900 hover:bg-slate-700 text-white font-semibold tracking-wide h-auto">
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                          </svg>
+                          Analysing…
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Estimate Price
+                        </span>
+                      )}
+                    </Button>
+                    {result !== null && <Button
+                      type="button" variant="outline" size="lg"
+                      onClick={handleReset}
+                      className="border-slate-200 text-slate-500 hover:text-slate-700 h-auto w-14"
+                    >
+                      <RotateCcw className="h-8 w-8" />
+                    </Button>}
+                  </div>
                 </div>
               </div>
 
@@ -359,34 +336,6 @@ export default function App() {
                   {error}
                 </div>
               )}
-
-              {/* Actions */}
-              <div className="flex gap-3">
-                <Button
-                  type="button" variant="outline" size="lg"
-                  onClick={handleReset}
-                  className="border-slate-200 text-slate-500 hover:text-slate-700"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-                <Button type="submit" size="lg" disabled={loading}
-                  className="flex-1 bg-slate-900 hover:bg-slate-700 text-white font-semibold tracking-wide">
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                      </svg>
-                      Analysing…
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Estimate Price
-                    </span>
-                  )}
-                </Button>
-              </div>
 
             </form>
 
